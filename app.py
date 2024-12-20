@@ -1,10 +1,15 @@
 from flask import Flask, render_template, request, jsonify
 import requests
 from bs4 import BeautifulSoup
+from flask_caching import Cache
 
 app = Flask(__name__)
 
+# Konfigurasi cache
+cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 300})
+
 # Fungsi scraping
+@cache.memoize(timeout=300)  # Cache hasil fungsi ini selama 300 detik (5 menit)
 def scrape_komik(url):
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
