@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Komik Populer & Terbaru</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Komik Populer -->
+        <section class="popular-section">
+            <h2>Komik Populer</h2>
+            <div class="popular-list">
+                {% for komik in popular_data %}
+                <div class="komik-item">
+                    <img src="{{ komik.image }}" alt="{{ komik.title }}">
+                    <h3><a href="{{ komik.link }}" target="_blank">{{ komik.title }}</a></h3>
+                      <p>Chapter: {{ komik.chapter }}</p>
+                        <p>Rating: {{ komik.score }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% if popular_next %}
+            <a href="/popular" class="view-more">Lihat Semua</a>
+            {% endif %}
+        </section>
+
+        <!-- Komik Terbaru -->
+        <section class="latest-section">
+            <h2>Komik Terbaru</h2>
+            <div class="latest-list">
+                {% for komik in latest_data %}
+                <div class="komik-item">
+                    <img src="{{ komik.image }}" alt="{{ komik.title }}">
+                    <div>
+                        <h3><a href="{{ komik.link }}" target="_blank">{{ komik.title }}</a></h3>
+                        <p>Chapter: {{ komik.chapter }}</p>
+                        <p>Rating: {{ komik.score }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% if latest_next %}
+            <a href="/latest" class="view-more">Lihat Semua</a>
+            {% endif %}
+        </section>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/static/js/script.js"></script>
+</body>
+</html>
