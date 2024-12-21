@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, url_for, redirect, send_file
+from flask import Flask, render_template, request, jsonify, url_for, redirect, send_file, Response
 import requests
 import json
 from bs4 import BeautifulSoup
@@ -563,6 +563,28 @@ def page_not_found(e):
 @app.errorhandler(500)
 def internal_server_error(e):
     return render_template('error.html', error_message="Terjadi kesalahan internal server"), 500
+
+@app.route('/download/batch/')
+def download_batch_new():
+    chapters = request.args.getlist('chapters')
+    
+    # Create a response with SSE (Server-Sent Events) for progress updates
+    def generate():
+        try:
+            total_chapters = len(chapters)
+            for i, chapter in enumerate(chapters, 1):
+                # Your existing download logic here
+                # ...
+                
+                # Send progress update
+                progress = (i / total_chapters) * 100
+                yield f"data: {{'progress': {progress}, 'chapter': '{chapter}'}}\n\n"
+                
+            yield "data: {'status': 'complete'}\n\n"
+        except Exception as e:
+            yield f"data: {{'status': 'error', 'message': '{str(e)}'}}\n\n"
+    
+    return Response(generate(), mimetype='text/event-stream')
 
 if __name__ == '__main__':
     app.run(debug=True)

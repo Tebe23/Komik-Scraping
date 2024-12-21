@@ -101,11 +101,15 @@
             <div id="chapterList" class="grid gap-2 max-h-96 overflow-y-auto">
                 {% for chapter in komik_detail.chapters %}
                 <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 flex-1">
                         <input type="checkbox" class="chapter-checkbox" value="{{ chapter.link }}" id="chapter-{{ loop.index }}">
-                        <label for="chapter-{{ loop.index }}">{{ chapter.title }}</label>
+                        <div class="flex-1">
+                            <a href="{{ url_for('chapter', url=chapter.link) }}" class="hover:text-blue-500 block">
+                                {{ chapter.title }}
+                            </a>
+                        </div>
                     </div>
-                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                    <span class="text-sm text-gray-500 dark:text-gray-400 ml-4">
                         {{ format_time_ago(chapter.time) }}
                     </span>
                 </div>
@@ -127,8 +131,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const chapters = Array.from(chapterList.children);
         
         chapters.sort((a, b) => {
-            const titleA = a.querySelector('span').textContent;
-            const titleB = b.querySelector('span').textContent;
+            const titleA = a.querySelector('a').textContent.trim();
+            const titleB = b.querySelector('a').textContent.trim();
             
             const numA = parseFloat(titleA.replace(/[^0-9.]/g, ''));
             const numB = parseFloat(titleB.replace(/[^0-9.]/g, ''));
@@ -223,15 +227,58 @@ document.getElementById('downloadSelected').addEventListener('click', function()
         .map(cb => cb.value);
     
     if (selected.length === 0) {
-        alert('Pilih chapter yang ingin didownload terlebih dahulu');
+        const notification = notificationSystem.create({
+            title: 'Peringatan',
+            message: 'Pilih chapter yang ingin didownload terlebih dahulu',
+            icon: 'fas fa-exclamation-triangle'
+        });
+        notification.updateProgress(100);
         return;
     }
     
+    const notification = showDownloadNotification(`${selected.length} chapter`);
+    
+    // Simulate download progress (replace this with actual download logic)
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += 10;
+        notification.updateProgress(progress);
+        
+        if (progress >= 100) {
+            clearInterval(interval);
+            notification.complete();
+        }
+    }, 500);
+    
+    // Your existing download code here
     const url = new URL(window.location.href.replace('/detail/', '/download/batch/'));
     selected.forEach(chapter => url.searchParams.append('chapters', chapter));
     
     window.location.href = url.toString();
 });
 </script>
+
+<style>
+.chapter-checkbox {
+    cursor: pointer;
+    min-width: 20px;
+}
+
+#chapterList a {
+    text-decoration: none;
+    display: block;
+    width: 100%;
+    padding: 2px 0;
+}
+
+#chapterList .flex-1 {
+    min-width: 0; /* Prevent text overflow */
+}
+
+/* Hover effect for the entire row */
+#chapterList > div:hover {
+    background-color: rgba(59, 130, 246, 0.05);
+}
+</style>
 
 {% endblock %}

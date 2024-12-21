@@ -20,6 +20,36 @@
         .chapter-navigation:hover {
             opacity: 1;
         }
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background-color: #e2e8f0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: #3b82f6;
+            transition: width 0.3s ease;
+        }
+
+        .notification {
+            animation: slideIn 0.3s ease;
+            max-width: 400px;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
@@ -171,7 +201,85 @@
                 mobileMenu.classList.add('hidden');
             }
         });
+
+        // Notification System
+        const notificationSystem = {
+            create: function(options) {
+                const notification = document.createElement('div');
+                notification.className = 'notification bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 mb-4 flex flex-col';
+                
+                // Notification header
+                const header = document.createElement('div');
+                header.className = 'flex items-center justify-between mb-2';
+                header.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="${options.icon || 'fas fa-info-circle'} mr-2 text-blue-500"></i>
+                        <span class="font-medium">${options.title || 'Notification'}</span>
+                    </div>
+                    <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" onclick="this.parentElement.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                // Notification message
+                const message = document.createElement('p');
+                message.className = 'text-sm text-gray-600 dark:text-gray-300';
+                message.textContent = options.message || '';
+                
+                // Progress bar
+                const progressBar = document.createElement('div');
+                progressBar.className = 'progress-bar';
+                const progressBarFill = document.createElement('div');
+                progressBarFill.className = 'progress-bar-fill';
+                progressBarFill.style.width = '0%';
+                progressBar.appendChild(progressBarFill);
+                
+                // Assemble notification
+                notification.appendChild(header);
+                notification.appendChild(message);
+                notification.appendChild(progressBar);
+                
+                // Add to container
+                document.getElementById('notificationContainer').appendChild(notification);
+                
+                return {
+                    notification,
+                    updateProgress: (progress) => {
+                        progressBarFill.style.width = `${progress}%`;
+                    },
+                    complete: () => {
+                        progressBarFill.style.width = '100%';
+                        progressBarFill.style.backgroundColor = '#10B981'; // Success color
+                        setTimeout(() => {
+                            notification.remove();
+                        }, 3000);
+                    },
+                    error: (errorMessage) => {
+                        progressBarFill.style.backgroundColor = '#EF4444'; // Error color
+                        message.textContent = errorMessage;
+                        setTimeout(() => {
+                            notification.remove();
+                        }, 5000);
+                    }
+                };
+            }
+        };
+
+        // Example usage for download:
+        window.showDownloadNotification = function(filename) {
+            const notification = notificationSystem.create({
+                title: 'Mengunduh Chapter',
+                message: `Mengunduh ${filename}...`,
+                icon: 'fas fa-download'
+            });
+            
+            return notification;
+        };
     </script>
     {% block scripts %}{% endblock %}
+
+    <!-- Notification Container -->
+    <div id="notificationContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2">
+    </div>
 </body>
 </html>
