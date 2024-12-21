@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Riwayat - KomikApp{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Riwayat Baca</h1>
+        <button id="clearHistoryBtn" class="text-red-500 hover:text-red-600">
+            <i class="fas fa-trash-alt mr-2"></i>Hapus Riwayat
+        </button>
+    </div>
+    <div id="historyList" class="space-y-4">
+        <!-- History will be loaded here -->
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const historyList = document.getElementById('historyList');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    
+    function loadHistory() {
+        const history = JSON.parse(localStorage.getItem('mangaHistory')) || [];
+
+        if (history.length === 0) {
+            historyList.innerHTML = `
+                <div class="text-center py-12">
+                    <i class="fas fa-history text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-500">Belum ada riwayat baca</p>
+                </div>
+            `;
+            return;
+        }
+
+        historyList.innerHTML = history.map(item => `
+            <a href="${item.chapterUrl}" 
+               class="block bg-white dark:bg-gray-800 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-medium">${item.title}</h3>
+                    <span class="text-sm text-gray-500">${formatTimeAgo(new Date(item.timestamp))}</span>
+                </div>
+            </a>
+        `).join('');
+    }
+
+    function formatTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        
+        let interval = Math.floor(seconds / 31536000);
+        if (interval > 1) return interval + ' tahun yang lalu';
+        
+        interval = Math.floor(seconds / 2592000);
+        if (interval > 1) return interval + ' bulan yang lalu';
+        
+        interval = Math.floor(seconds / 86400);
+        if (interval > 1) return interval + ' hari yang lalu';
+        
+        interval = Math.floor(seconds / 3600);
+        if (interval > 1) return interval + ' jam yang lalu';
+        
+        interval = Math.floor(seconds / 60);
+        if (interval > 1) return interval + ' menit yang lalu';
+        
+        return 'Baru saja';
+    }
+
+    clearHistoryBtn.addEventListener('click', () => {
+        if (confirm('Apakah Anda yakin ingin menghapus semua riwayat baca?')) {
+            localStorage.removeItem('mangaHistory');
+            loadHistory();
+        }
+    });
+
+    loadHistory();
+});
+</script>
+{% endblock %}

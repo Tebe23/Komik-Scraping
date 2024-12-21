@@ -18,9 +18,14 @@
             <div class="md:w-2/3 lg:w-3/4 p-6">
                 <div class="flex flex-wrap items-center gap-4 mb-4">
                     <h1 class="text-3xl font-bold">{{ komik_detail.title }}</h1>
-                    <div class="flex items-center">
-                        <i class="fas fa-star text-yellow-400"></i>
-                        <span class="ml-1 font-semibold">{{ komik_detail.rating }}</span>
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-star text-yellow-400"></i>
+                            <span class="ml-1 font-semibold">{{ komik_detail.rating }}</span>
+                        </div>
+                        <button id="favoriteBtn" class="text-2xl">
+                            <i class="far fa-heart text-red-500 hover:scale-110 transition-transform"></i>
+                        </button>
                     </div>
                 </div>
                 
@@ -86,8 +91,7 @@
             </div>
 
             <!-- Chapter List Container -->
-            <div id="chapterList" class="grid gap- ```html
-2 max-h-96 overflow-y-auto">
+            <div id="chapterList" class="grid gap-2 max-h-96 overflow-y-auto">
                 {% for chapter in komik_detail.chapters %}
                 <a href="{{ url_for('chapter', url=chapter.link) }}" 
                    class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
@@ -145,6 +149,53 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initial sort
     sortChapters();
+});
+</script>
+
+<!-- Favorites and History Management -->
+<script>
+// Favorites Management
+document.addEventListener('DOMContentLoaded', function() {
+    const favoriteBtn = document.getElementById('favoriteBtn');
+    const mangaData = {
+        title: '{{ komik_detail.title }}',
+        thumbnail: '{{ komik_detail.thumbnail }}',
+        type: '{{ komik_detail.type }}',
+        link: window.location.pathname,
+        lastUpdated: new Date().toISOString()
+    };
+
+    // Load favorites from localStorage
+    let favorites = JSON.parse(localStorage.getItem('mangaFavorites')) || [];
+    
+    // Check if manga is already in favorites
+    const isInFavorites = favorites.some(item => item.link === mangaData.link);
+    updateFavoriteButton(isInFavorites);
+
+    favoriteBtn.addEventListener('click', () => {
+        const index = favorites.findIndex(item => item.link === mangaData.link);
+        
+        if (index === -1) {
+            // Add to favorites
+            favorites.push(mangaData);
+            updateFavoriteButton(true);
+        } else {
+            // Remove from favorites
+            favorites.splice(index, 1);
+            updateFavoriteButton(false);
+        }
+        
+        localStorage.setItem('mangaFavorites', JSON.stringify(favorites));
+    });
+
+    function updateFavoriteButton(isFavorited) {
+        const icon = favoriteBtn.querySelector('i');
+        if (isFavorited) {
+            icon.classList.replace('far', 'fas');
+        } else {
+            icon.classList.replace('fas', 'far');
+        }
+    }
 });
 </script>
 {% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Favorit - KomikApp{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-2xl font-bold mb-6">Komik Favorit</h1>
+    <div id="favoritesList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+        <!-- Favorites will be loaded here -->
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const favoritesList = document.getElementById('favoritesList');
+    const favorites = JSON.parse(localStorage.getItem('mangaFavorites')) || [];
+
+    if (favorites.length === 0) {
+        favoritesList.innerHTML = `
+            <div class="col-span-full text-center py-12">
+                <i class="far fa-heart text-4xl text-gray-400 mb-4"></i>
+                <p class="text-gray-500">Belum ada komik favorit</p>
+            </div>
+        `;
+        return;
+    }
+
+    favorites.forEach(manga => {
+        const mangaCard = document.createElement('div');
+        mangaCard.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:-translate-y-1';
+        mangaCard.innerHTML = `
+            <a href="${manga.link}" class="block">
+                <div class="relative pb-[140%]">
+                    <img src="${manga.thumbnail}" alt="${manga.title}" class="absolute inset-0 w-full h-full object-cover">
+                </div>
+                <div class="p-4">
+                    <h3 class="font-medium text-sm line-clamp-2">${manga.title}</h3>
+                    <div class="mt-2 flex items-center text-xs text-gray-500 dark:text-gray-400">
+                        <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">${manga.type}</span>
+                    </div>
+                </div>
+            </a>
+        `;
+        favoritesList.appendChild(mangaCard);
+    });
+});
+</script>
+{% endblock %}

@@ -27,6 +27,7 @@
     <nav class="bg-white dark:bg-gray-800 shadow-lg fixed w-full z-50">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between h-16">
+                <!-- Left side -->
                 <div class="flex items-center">
                     <a href="/" class="flex-shrink-0 flex items-center">
                         <i class="fas fa-book-open text-blue-500 text-2xl"></i>
@@ -36,13 +37,45 @@
                         <a href="/" class="hover:text-blue-500 px-3 py-2 rounded-md text-sm font-medium">Beranda</a>
                         <a href="/popular" class="hover:text-blue-500 px-3 py-2 rounded-md text-sm font-medium">Populer</a>
                         <a href="/latest" class="hover:text-blue-500 px-3 py-2 rounded-md text-sm font-medium">Terbaru</a>
+                        <a href="/favorites" class="hover:text-blue-500 px-3 py-2 rounded-md text-sm font-medium">
+                            <i class="fas fa-heart"></i> Favorit
+                        </a>
+                        <a href="/history" class="hover:text-blue-500 px-3 py-2 rounded-md text-sm font-medium">
+                            <i class="fas fa-history"></i> Riwayat
+                        </a>
                     </div>
                 </div>
+
+                <!-- Right side -->
                 <div class="flex items-center">
                     <button id="darkModeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
                         <i class="fas fa-moon"></i>
                     </button>
+                    <button id="hamburgerBtn" class="ml-2 md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <i class="fas fa-bars"></i>
+                    </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="/" class="block px-3 py-2 rounded-md text-base font-medium hover:text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <i class="fas fa-home mr-2"></i>Beranda
+                </a>
+                <a href="/popular" class="block px-3 py-2 rounded-md text-base font-medium hover:text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <i class="fas fa-fire mr-2"></i>Populer
+                </a>
+                <a href="/latest" class="block px-3 py-2 rounded-md text-base font-medium hover:text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <i class="fas fa-clock mr-2"></i>Terbaru
+                </a>
+                <a href="/favorites" class="block px-3 py-2 rounded-md text-base font-medium hover:text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <i class="fas fa-heart mr-2"></i>Favorit
+                </a>
+                <a href="/history" class="block px-3 py-2 rounded-md text-base font-medium hover:text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <i class="fas fa-history mr-2"></i>Riwayat
+                </a>
             </div>
         </div>
     </nav>
@@ -110,6 +143,18 @@
 
             lazyImages.forEach(img => imageObserver.observe(img));
         });
+        
+        // Hamburger menu toggle
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+const mobileMenu = document.getElementById('mobileMenu');
+
+hamburgerBtn.addEventListener('click', () => {
+    if (mobileMenu.classList.contains('hidden')) {
+        mobileMenu.classList.remove('hidden');
+    } else {
+        mobileMenu.classList.add('hidden');
+    }
+});
     </script>
     {% block scripts %}{% endblock %}
 </body>

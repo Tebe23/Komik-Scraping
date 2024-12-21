@@ -154,4 +154,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
+<script>
+// Reading History Management
+document.addEventListener('DOMContentLoaded', function() {
+    const historyData = {
+        title: '{{ chapter_data.title }}',
+        chapterUrl: window.location.pathname,
+        timestamp: new Date().toISOString()
+    };
+
+    // Load reading history from localStorage
+    let history = JSON.parse(localStorage.getItem('mangaHistory')) || [];
+    
+    // Remove old entry if exists
+    const index = history.findIndex(item => item.chapterUrl === historyData.chapterUrl);
+    if (index !== -1) {
+        history.splice(index, 1);
+    }
+    
+    // Add new entry at the beginning
+    history.unshift(historyData);
+    
+    // Keep only last 50 entries
+    if (history.length > 50) {
+        history = history.slice(0, 50);
+    }
+    
+    localStorage.setItem('mangaHistory', JSON.stringify(history));
+});
+</script>
 {% endblock %}

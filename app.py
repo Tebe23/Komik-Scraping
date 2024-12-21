@@ -304,7 +304,7 @@ def latest():
     page = request.args.get('page', 1, type=int)
     items_per_page = 24
     
-    url = f"https://komikcast.bz/daftar-komik/?status=&type=&orderby=update&page={page}"
+    url = f"https://komikcast.bz/daftar-komik/?sortby=update&page={page}"
     komik_data, next_page = scrape_komik(url, force_refresh)
     
     # Pagination
