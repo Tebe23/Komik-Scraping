@@ -7,48 +7,59 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        .lazy-image {
-            transition: opacity 0.3s ease-in-out;
-        }
-        .lazy-image.loading {
+        /* ... (previous styles remain the same) ... */
+        
+        /* Added styles for improved dropdown */
+        .settings-dropdown {
+            transform: translateY(10px);
+            transition: all 0.2s ease-in-out;
+            visibility: hidden;
             opacity: 0;
         }
-        .chapter-navigation {
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .chapter-navigation:hover {
+        
+        .settings-group:hover .settings-dropdown {
+            transform: translateY(0);
+            visibility: visible;
             opacity: 1;
         }
-        .progress-bar {
-            width: 100%;
-            height: 4px;
-            background-color: #e2e8f0;
-            border-radius: 2px;
-            overflow: hidden;
-            margin-top: 8px;
+
+        .dropdown-item {
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
         }
 
-        .progress-bar-fill {
-            height: 100%;
-            background-color: #3b82f6;
-            transition: width 0.3s ease;
+        .dropdown-item:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
         }
 
-        .notification {
-            animation: slideIn 0.3s ease;
-            max-width: 400px;
+        .dropdown-item i {
+            width: 20px;
+            margin-right: 0.75rem;
         }
 
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+        /* Added styles for backup/restore modal */
+        .modal {
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .modal-content {
+            transform: scale(0.95);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        .btn-primary {
+            @apply bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-200;
+        }
+
+        .btn-secondary {
+            @apply bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors duration-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600;
         }
     </style>
 </head>
@@ -57,39 +68,90 @@
     <nav class="bg-white dark:bg-gray-800 shadow-lg fixed w-full z-50">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between h-16">
-                <!-- Left side -->
-                <div class="flex items-center">
-                    <a href="/" class="flex-shrink-0 flex items-center">
+                <!-- Left side - Brand and Primary Navigation -->
+                <div class="flex items-center space-x-8">
+                    <!-- Brand -->
+                    <a href="/" class="flex-shrink-0 flex items-center space-x-2">
                         <i class="fas fa-book-open text-blue-500 text-2xl"></i>
-                        <span class="ml-2 text-xl font-bold">KomikApp</span>
+                        <span class="text-xl font-bold">KomikApp</span>
                     </a>
-                    <div class="hidden md:ml-6 md:flex md:space-x-8">
-                        <a href="/" class="hover:text-blue-500 px-3 py-2 rounded-md text-sm font-medium">Beranda</a>
-                        <a href="/popular" class="hover:text-blue-500 px-3 py-2 rounded-md text-sm font-medium">Populer</a>
-                        <a href="/latest" class="hover:text-blue-500 px-3 py-2 rounded-md text-sm font-medium">Terbaru</a>
-                        <a href="/favorites" class="hover:text-blue-500 px-3 py-2 rounded-md text-sm font-medium">
-                            <i class="fas fa-heart"></i> Favorit
+
+                    <!-- Primary Navigation -->
+                    <div class="hidden md:flex items-center space-x-4">
+                        <a href="/" class="nav-link flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium hover:text-blue-500 transition-colors duration-200">
+                            <i class="fas fa-home"></i>
+                            <span>Beranda</span>
                         </a>
-                        <a href="/history" class="hover:text-blue-500 px-3 py-2 rounded-md text-sm font-medium">
-                            <i class="fas fa-history"></i> Riwayat
+                        <a href="/popular" class="nav-link flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium hover:text-blue-500 transition-colors duration-200">
+                            <i class="fas fa-fire"></i>
+                            <span>Populer</span>
+                        </a>
+                        <a href="/latest" class="nav-link flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium hover:text-blue-500 transition-colors duration-200">
+                            <i class="fas fa-clock"></i>
+                            <span>Terbaru</span>
                         </a>
                     </div>
+                </div>
 
-                    <!-- Formulir Pencarian di Navbar -->
-                    <form action="{{ url_for('search') }}" method="get" class="hidden md:flex md:items-center md:space-x-2">
-                        <input type="text" name="query" placeholder="Cari komik..." class="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none">
-                        <button type="submit" class="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600">
-                            <i class="fas fa-search"></i>
-                        </button>
+                <!-- Center - Search Bar -->
+                <div class="hidden md:flex flex-1 items-center justify-center px-6">
+                    <form action="{{ url_for('search') }}" method="get" class="w-full max-w-lg">
+                        <div class="relative">
+                            <input type="text" name="query" placeholder="Cari komik..." 
+                                   class="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 
+                                          text-gray-800 dark:text-gray-200 focus:outline-none
+                                          focus:ring-2 focus:ring-blue-500 transition-all duration-200">
+                            <button type="submit" class="absolute right-2 top-1/2 transform -translate-y-1/2
+                                                       text-gray-500 hover:text-blue-500 transition-colors duration-200">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
                     </form>
                 </div>
 
-                <!-- Right side -->
-                <div class="flex items-center">
-                    <button id="darkModeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                        <i class="fas fa-moon"></i>
-                    </button>
-                    <button id="hamburgerBtn" class="ml-2 md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                <!-- Right side - User Menu -->
+                <div class="flex items-center space-x-4">
+                    <!-- Favorites and History -->
+                    <div class="hidden md:flex items-center space-x-2">
+                        <a href="/favorites" class="nav-link flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium hover:text-blue-500 transition-colors duration-200">
+                            <i class="fas fa-heart"></i>
+                            <span>Favorit</span>
+                        </a>
+                        <a href="/history" class="nav-link flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium hover:text-blue-500 transition-colors duration-200">
+                            <i class="fas fa-history"></i>
+                            <span>Riwayat</span>
+                        </a>
+                    </div>
+
+                    <!-- Settings Dropdown -->
+                    <div class="relative settings-group">
+                        <button class="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium
+                                     hover:text-blue-500 transition-colors duration-200">
+                            <i class="fas fa-cog"></i>
+                            <span class="hidden md:inline">Pengaturan</span>
+                        </button>
+                        <div class="settings-dropdown absolute right-0 mt-2 w-56 rounded-lg shadow-lg
+                                  bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5">
+                            <div class="py-1">
+                                <button onclick="showBackupModal()" class="dropdown-item w-full text-left">
+                                    <i class="fas fa-download"></i>
+                                    <span>Backup Data</span>
+                                </button>
+                                <button onclick="showRestoreModal()" class="dropdown-item w-full text-left">
+                                    <i class="fas fa-upload"></i>
+                                    <span>Restore Data</span>
+                                </button>
+                                <button id="darkModeToggle" class="dropdown-item w-full text-left">
+                                    <i class="fas fa-moon"></i>
+                                    <span>Mode Gelap</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Menu Button -->
+                    <button id="hamburgerBtn" class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700
+                                                    transition-colors duration-200">
                         <i class="fas fa-bars"></i>
                     </button>
                 </div>
@@ -97,34 +159,130 @@
         </div>
 
         <!-- Mobile Menu -->
-        <div id="mobileMenu" class="hidden md:hidden">
-            <div class="px-2 pt-2 pb-3 space-y-1">
-                <a href="/" class="block px-3 py-2 rounded-md text-base font-medium hover:text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <i class="fas fa-home mr-2"></i>Beranda
+        <div id="mobileMenu" class="hidden md:hidden border-t dark:border-gray-700">
+            <div class="px-4 py-2 space-y-1">
+                <!-- Mobile Search -->
+                <form action="{{ url_for('search') }}" method="get" class="mb-4">
+                    <div class="relative">
+                        <input type="text" name="query" placeholder="Cari komik..." 
+                               class="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 
+                                      text-gray-800 dark:text-gray-200 focus:outline-none">
+                        <button type="submit" class="absolute right-2 top-1/2 transform -translate-y-1/2
+                                                   text-gray-500 hover:text-blue-500">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Mobile Navigation -->
+                <a href="/" class="mobile-nav-link block px-3 py-2 rounded-md text-base font-medium">
+                    <i class="fas fa-home w-6"></i>
+                    <span>Beranda</span>
                 </a>
-                <a href="/popular" class="block px-3 py-2 rounded-md text-base font-medium hover:text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <i class="fas fa-fire mr-2"></i>Populer
+                <a href="/popular" class="mobile-nav-link block px-3 py-2 rounded-md text-base font-medium">
+                    <i class="fas fa-fire w-6"></i>
+                    <span>Populer</span>
                 </a>
-                <a href="/latest" class="block px-3 py-2 rounded-md text-base font-medium hover:text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <i class="fas fa-clock mr-2"></i>Terbaru
+                <a href="/latest" class="mobile-nav-link block px-3 py-2 rounded-md text-base font-medium">
+                    <i class="fas fa-clock w-6"></i>
+                    <span>Terbaru</span>
                 </a>
-                <a href="/favorites" class="block px-3 py-2 rounded-md text-base font-medium hover:text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <i class="fas fa-heart mr-2"></i>Favorit
+                <a href="/favorites" class="mobile-nav-link block px-3 py-2 rounded-md text-base font-medium">
+                    <i class="fas fa-heart w-6"></i>
+                    <span>Favorit</span>
                 </a>
-                <a href="/history" class="block px-3 py-2 rounded-md text-base font-medium hover:text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <i class="fas fa-history mr-2"></i>Riwayat
+                <a href="/history" class="mobile-nav-link block px-3 py-2 rounded-md text-base font-medium">
+                    <i class="fas fa-history w-6"></i>
+                    <span>Riwayat</span>
                 </a>
 
-                <!-- Formulir Pencarian di Mobile Menu -->
-                <form action="{{ url_for('search') }}" method="get" class="flex items-center space-x-2">
-                    <input type="text" name="query" placeholder="Cari komik..." class="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none">
-                    <button type="submit" class="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600">
-                        <i class="fas fa-search"></i>
+                <!-- Mobile Settings -->
+                <div class="border-t dark:border-gray-700 pt-2 mt-2 space-y-1">
+                    <button onclick="showBackupModal()" class="mobile-nav-link block w-full text-left px-3 py-2 rounded-md text-base font-medium">
+                        <i class="fas fa-download w-6"></i>
+                        <span>Backup Data</span>
                     </button>
-                </form>
+                    <button onclick="showRestoreModal()" class="mobile-nav-link block w-full text-left px-3 py-2 rounded-md text-base font-medium">
+                        <i class="fas fa-upload w-6"></i>
+                        <span>Restore Data</span>
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
+
+    <!-- Backup Modal -->
+    <div id="backupModal" class="modal fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="modal-content bg-white dark:bg-gray-800 rounded-lg max-w-md w-full mx-4 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Backup Data</h3>
+                <button onclick="hideBackupModal()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="mb-6">
+                <p class="text-gray-600 dark:text-gray-400 mb-4">
+                    Backup akan menyimpan data berikut:
+                </p>
+                <ul class="space-y-2 text-sm">
+                    <li class="flex items-center">
+                        <i class="fas fa-heart text-red-500 w-5"></i>
+                        <span>Daftar Favorit</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-history text-blue-500 w-5"></i>
+                        <span>Riwayat Baca</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button onclick="hideBackupModal()" class="btn-secondary">
+                    Batal
+                </button>
+                <button onclick="performBackup()" class="btn-primary">
+                    <i class="fas fa-download mr-2"></i>
+                    Download Backup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Restore Modal -->
+    <div id="restoreModal" class="modal fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="modal-content bg-white dark:bg-gray-800 rounded-lg max-w-md w-full mx-4 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Restore Data</h3>
+                <button onclick="hideRestoreModal()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="mb-6">
+                <p class="text-gray-600 dark:text-gray-400 mb-4">
+                    Pilih file backup untuk memulihkan data:
+                </p>
+                <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 text-center">
+                    <input type="file" id="restoreFile" accept=".json" class="hidden">
+                    <label for="restoreFile" class="cursor-pointer">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            Klik untuk memilih file atau drag & drop file backup di sini
+                        </p>
+                    </label>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button onclick="hideRestoreModal()" class="btn-secondary">
+                    Batal
+                </button>
+                <button onclick="performRestore()" class="btn-primary" id="restoreButton" disabled>
+                    <i class="fas fa-upload mr-2"></i>
+                    Restore Data
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rest of the content... -->
 
     <!-- Main Content -->
     <main class="pt-16 min-h-screen">
@@ -208,7 +366,6 @@
                 const notification = document.createElement('div');
                 notification.className = 'notification bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 mb-4 flex flex-col';
                 
-                // Notification header
                 const header = document.createElement('div');
                 header.className = 'flex items-center justify-between mb-2';
                 header.innerHTML = `
@@ -221,12 +378,10 @@
                     </button>
                 `;
                 
-                // Notification message
                 const message = document.createElement('p');
                 message.className = 'text-sm text-gray-600 dark:text-gray-300';
                 message.textContent = options.message || '';
                 
-                // Progress bar
                 const progressBar = document.createElement('div');
                 progressBar.className = 'progress-bar';
                 const progressBarFill = document.createElement('div');
@@ -234,12 +389,10 @@
                 progressBarFill.style.width = '0%';
                 progressBar.appendChild(progressBarFill);
                 
-                // Assemble notification
                 notification.appendChild(header);
                 notification.appendChild(message);
                 notification.appendChild(progressBar);
                 
-                // Add to container
                 document.getElementById('notificationContainer').appendChild(notification);
                 
                 return {
@@ -249,13 +402,13 @@
                     },
                     complete: () => {
                         progressBarFill.style.width = '100%';
-                        progressBarFill.style.backgroundColor = '#10B981'; // Success color
+                        progressBarFill.style.backgroundColor = '#10B981';
                         setTimeout(() => {
                             notification.remove();
                         }, 3000);
                     },
                     error: (errorMessage) => {
-                        progressBarFill.style.backgroundColor = '#EF4444'; // Error color
+                        progressBarFill.style.backgroundColor = '#EF4444';
                         message.textContent = errorMessage;
                         setTimeout(() => {
                             notification.remove();
@@ -265,7 +418,7 @@
             }
         };
 
-        // Example usage for download:
+        // Download notification
         window.showDownloadNotification = function(filename) {
             const notification = notificationSystem.create({
                 title: 'Mengunduh Chapter',
@@ -275,6 +428,91 @@
             
             return notification;
         };
+
+        // Backup and Restore functions
+        function backupData() {
+            try {
+                const data = {
+                    favorites: JSON.parse(localStorage.getItem('mangaFavorites') || '[]'),
+                    history: JSON.parse(localStorage.getItem('mangaHistory') || '[]'),
+                    timestamp: new Date().toISOString()
+                    };
+
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `komikapp-backup-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                // Show success notification
+                notificationSystem.create({
+                    title: 'Backup Berhasil',
+                    message: 'Data favorit dan riwayat baca berhasil di-backup',
+                    icon: 'fas fa-check-circle'
+                }).complete();
+            } catch (error) {
+                // Show error notification
+                notificationSystem.create({
+                    title: 'Backup Gagal',
+                    message: 'Terjadi kesalahan saat mem-backup data',
+                    icon: 'fas fa-exclamation-circle'
+                }).error();
+            }
+        }
+
+        function restoreData(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    // Validate backup data
+                    if (!data.favorites || !data.history || !data.timestamp) {
+                        throw new Error('Format file backup tidak valid');
+                    }
+
+                    // Restore data
+                    localStorage.setItem('mangaFavorites', JSON.stringify(data.favorites));
+                    localStorage.setItem('mangaHistory', JSON.stringify(data.history));
+
+                    // Show success notification
+                    notificationSystem.create({
+                        title: 'Restore Berhasil',
+                        message: 'Data favorit dan riwayat baca berhasil di-restore',
+                        icon: 'fas fa-check-circle'
+                    }).complete();
+
+                    // Reload page to reflect changes
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } catch (error) {
+                    // Show error notification
+                    notificationSystem.create({
+                        title: 'Restore Gagal',
+                        message: 'Format file backup tidak valid atau rusak',
+                        icon: 'fas fa-exclamation-circle'
+                    }).error();
+                }
+            };
+
+            reader.onerror = function() {
+                notificationSystem.create({
+                    title: 'Restore Gagal',
+                    message: 'Terjadi kesalahan saat membaca file',
+                    icon: 'fas fa-exclamation-circle'
+                }).error();
+            };
+
+            reader.readAsText(file);
+        }
     </script>
     {% block scripts %}{% endblock %}
 
