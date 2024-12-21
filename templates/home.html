@@ -1,52 +1,122 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Komik Populer & Terbaru</title>
-    <link rel="stylesheet" href="/static/CSS/style.css">
-</head>
-<body>
-    <div class="container">
-        <!-- Komik Populer -->
-        <section class="popular-section">
-            <h2>Komik Populer</h2>
-            <div class="popular-list">
-                {% for komik in popular_data %}
-                <div class="komik-item">
-                    <img src="{{ komik.image }}" alt="{{ komik.title }}">
-                    <h3><a href="{{ komik.link }}" target="_blank">{{ komik.title }}</a></h3>
-                      <p>Chapter: {{ komik.chapter }}</p>
-                        <p>Rating: {{ komik.score }}</p>
-                </div>
-                {% endfor %}
-            </div>
-            {% if popular_next %}
-            <a href="/popular" class="view-more">Lihat Semua</a>
-            {% endif %}
-        </section>
+{% extends "base.html" %}
 
-        <!-- Komik Terbaru -->
-        <section class="latest-section">
-            <h2>Komik Terbaru</h2>
-            <div class="latest-list">
-                {% for komik in latest_data %}
-                <div class="komik-item">
-                    <img src="{{ komik.image }}" alt="{{ komik.title }}">
-                    <div>
-                        <h3><a href="{{ komik.link }}" target="_blank">{{ komik.title }}</a></h3>
-                        <p>Chapter: {{ komik.chapter }}</p>
-                        <p>Rating: {{ komik.score }}</p>
+{% block title %}Beranda - KomikApp{% endblock %}
+
+{% block content %}
+<!-- Featured Manga Carousel -->
+<div class="relative bg-gray-800 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="relative">
+            <div class="swiper-container featured-swiper">
+                <div class="swiper-wrapper">
+                    {% for manga in featured_manga %}
+                    <div class="swiper-slide">
+                        <a href="{{ url_for('detail', url=manga.link) }}" class="block relative h-96 rounded-lg overflow-hidden">
+                            <img src="{{ manga.image }}" alt="{{ manga.title }}" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent">
+                                <div class="absolute bottom-0 left-0 p-6">
+                                    <h2 class="text-2xl font-bold text-white">{{ manga.title }}</h2>
+                                    <div class="flex items-center mt-2">
+                                        <span class="bg-blue-500 text-white px-2 py-1 rounded text-sm">{{ manga.type }}</span>
+                                        <span class="ml-2 text-yellow-400"><i class="fas fa-star"></i> {{ manga.score }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="swiper-pagination"></div>
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Latest Updates -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Update Terbaru</h2>
+        <a href="{{ url_for('latest') }}" class="text-blue-500 hover:text-blue-600">Lihat Semua</a>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+        {% for manga in latest_manga %}
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:-translate-y-1">
+            <a href="{{ url_for('detail', url=manga.link) }}" class="block">
+                <div class="relative pb-[140%]">
+                    <img data-src="{{ manga.image }}" alt="{{ manga.title }}" class="lazy-image absolute inset-0 w-full h-full object-cover">
+                    <div class="absolute top-0 right-0 m-2">
+                        <span class="bg-yellow-400 text-black px-2 py-1 rounded text-sm">{{ manga.score }}</span>
+                    </div>
+                    {% if manga.chapter %}
+                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black p-2">
+                        <span class="text-white text-sm">{{ manga.chapter }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="p-4">
+                    <h3 class="font-medium text-sm line-clamp-2">{{ manga.title }}</h3>
+                    <div class="mt-2 flex items-center text-xs text-gray-500 dark:text-gray-400">
+                        <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">{{ manga.type }}</span>
+                        <span class="ml-2">{{ format_time_ago(manga.update_time) }}</span>
                     </div>
                 </div>
-                {% endfor %}
-            </div>
-            {% if latest_next %}
-            <a href="/latest" class="view-more">Lihat Semua</a>
-            {% endif %}
-        </section>
+            </a>
+        </div>
+        {% endfor %}
     </div>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="/static/js/script.js"></script>
-</body>
-</html>
+</div>
+
+<!-- Popular Manga -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Populer</h2>
+        <a href="{{ url_for('popular') }}" class="text-blue-500 hover:text-blue-600">Lihat Semua</a>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+        {% for manga in popular_manga %}
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:-translate-y-1">
+            <a href="{{ url_for('detail', url=manga.link) }}" class="block">
+                <div class="relative pb-[140%]">
+                    <img data-src="{{ manga.image }}" alt="{{ manga.title }}" class="lazy-image absolute inset-0 w-full h-full object-cover">
+                    <div class="absolute top-0 right-0 m-2">
+                        <span class="bg-yellow-400 text-black px-2 py-1 rounded text-sm">{{ manga.score }}</span>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <h3 class="font-medium text-sm line-clamp-2">{{ manga.title }}</h3>
+                    <div class="mt-2 flex items-center text-xs text-gray-500 dark:text-gray-400">
+                        <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">{{ manga.type }}</span>
+                        <span class="ml-2">{{ manga.status }}</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.7/swiper-bundle.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.7/swiper-bundle.min.js"></script>
+<script>
+    new Swiper('.featured-swiper', {
+        slidesPerView: 1,
+        spaceBetween: 30,
+        loop: true,
+        autoplay: {
+            delay: 5000,
+        },
+        pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+        },
+        navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+        },
+    });
+</script>
+{% endblock %}

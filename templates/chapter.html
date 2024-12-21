@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}{{ chapter_data.title }} - KomikApp{% endblock %}
+
+{% block content %}
+<!-- Chapter Navigation Bar -->
+<div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg z-40 transition-transform duration-300 chapter-nav" id="navBar">
+    <div class="max-w-7xl mx-auto px-4 py-3">
+        <div class="flex items-center justify-between">
+            <!-- Previous Chapter -->
+            {% if chapter_data.prev_chapter %}
+            <a href="{{ url_for('chapter', url=chapter_data.prev_chapter) }}" 
+               class="flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600">
+                <i class="fas fa-chevron-left mr-2"></i>
+                <span>Sebelumnya</span>
+            </a>
+            {% else %}
+            <div></div>
+            {% endif %}
+
+            <!-- Chapter Select -->
+            <div class="flex-1 max-w-xs mx-4">
+                <select class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg" 
+                        onchange="if(this.value) window.location.href=this.value">
+                    {% for option in chapter_data.chapter_options %}
+                    <option value="{{ url_for('chapter', url=option.link) }}" 
+                            {% if option.selected %}selected{% endif %}>
+                        {{ option.title }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Next Chapter -->
+            {% if chapter_data.next_chapter %}
+            <a href="{{ url_for('chapter', url=chapter_data.next_chapter) }}"
+               class="flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600">
+                <span>Selanjutnya</span>
+                <i class="fas fa-chevron-right ml-2"></i>
+            </a>
+            {% else %}
+            <div></div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Reading Area -->
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold text-center mb-8">{{ chapter_data.title }}</h1>
+    
+    <!-- Side Navigation Buttons -->
+    <div class="fixed top-1/2 left-0 right-0 transform -translate-y-1/2 z-30 pointer-events-none">
+        <div class="max-w-6xl mx-auto px-4 flex justify-between">
+            {% if chapter_data.prev_chapter %}
+            <a href="{{ url_for('chapter', url=chapter_data.prev_chapter) }}" 
+               class="chapter-navigation pointer-events-auto p-4 bg-gray-800/50 hover:bg-gray-800/75 rounded-full text-white">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+            
+            {% if chapter_data.next_chapter %}
+            <a href="{{ url_for('chapter', url=chapter_data.next_chapter) }}"
+               class="chapter-navigation pointer-events-auto p-4 bg-gray-800/50 hover:bg-gray-800/75 rounded-full text-white">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Chapter Images -->
+    <div class="manga-images">
+        {% for image in chapter_data.images %}
+        <img data-src="{{ image }}" 
+             alt="Page {{ loop.index }}"
+             class="lazy-image w-full rounded-lg shadow-lg"
+             loading="lazy">
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Padding for Navigation Bar -->
+<div class="h-16"></div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.manga-images {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.manga-images img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.chapter-nav {
+    transition: transform 0.3s ease;
+    transform: translateY(0);
+}
+
+.chapter-nav.hidden {
+    transform: translateY(100%);
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let lastScrollY = window.scrollY;
+const nav = document.querySelector('.chapter-nav');
+let timer = null;
+
+window.addEventListener('scroll', () => {
+    if (timer !== null) {
+        clearTimeout(timer);
+    }
+
+    const currentScrollY = window.scrollY;
+    
+    if (currentScrollY > lastScrollY) {
+        // Scrolling down - hide navbar
+        nav.classList.add('hidden');
+    } else {
+        // Scrolling up - show navbar
+        nav.classList.remove('hidden');
+    }
+    
+    lastScrollY = currentScrollY;
+
+    // Hide navbar after 3 seconds of no scrolling
+    timer = setTimeout(() => {
+        nav.classList.add('hidden');
+    }, 3000);
+});
+
+// Show navbar when mouse moves to top of screen
+document.addEventListener('mousemove', (e) => {
+    if (e.clientY < 50) {
+        nav.classList.remove('hidden');
+    }
+});
+
+// Lazy load images
+document.addEventListener('DOMContentLoaded', () => {
+    const images = document.querySelectorAll('.lazy-image');
+    images.forEach(img => {
+        img.addEventListener('load', () => {
+            img.style.opacity = 1;
+        });
+    });
+});
+</script>
+{% endblock %}

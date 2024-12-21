@@ -1,0 +1,120 @@
+{# latest.html #}
+{% extends "base.html" %}
+
+{% block title %}Update Terbaru - KomikApp{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold mb-4">Update Terbaru</h1>
+        <div class="flex flex-wrap gap-4 items-center">
+            <!-- Filter Buttons -->
+            <div class="flex flex-wrap gap-2">
+                <button class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 active:bg-blue-700">
+                    Semua
+                </button>
+                <button class="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                    Hari Ini
+                </button>
+                <button class="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                    Minggu Ini
+                </button>
+                <button class="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                    Bulan Ini
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Latest Updates Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6" id="mangaGrid">
+        {% for manga in komik_data %}
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:-translate-y-1">
+            <a href="{{ url_for('detail', url=manga.link) }}" class="block">
+                <div class="relative pb-[140%]">
+                    <img data-src="{{ manga.image }}" 
+                         alt="{{ manga.title }}" 
+                         class="lazy-image absolute inset-0 w-full h-full object-cover">
+                    <div class="absolute top-0 right-0 m-2">
+                        <span class="bg-yellow-400 text-black px-2 py-1 rounded text-sm font-medium">
+                            {{ manga.score }}
+                        </span>
+                    </div>
+                    {% if manga.chapter %}
+                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black p-2">
+                        <span class="text-white text-sm">{{ manga.chapter }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="p-4">
+                    <h3 class="font-medium text-sm line-clamp-2 mb-2">{{ manga.title }}</h3>
+                    <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                        <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
+                            {{ manga.type }}
+                        </span>
+                        <span>{{ format_time_ago(manga.update_time) }}</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Load More / Pagination -->
+    <div class="mt-8 flex justify-center" id="paginationContainer">
+        {% if current_page > 1 %}
+        <a href="{{ url_for('latest', page=current_page-1) }}" 
+           class="mx-1 px-4 py-2 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+            <i class="fas fa-chevron-left mr-1"></i> Sebelumnya
+        </a>
+        {% endif %}
+
+        {% if has_next %}
+        <a href="{{ url_for('latest', page=current_page+1) }}" 
+           class="mx-1 px-4 py-2 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+            Selanjutnya <i class="fas fa-chevron-right ml-1"></i>
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize lazy loading for new images
+function initializeLazyLoading() {
+    const lazyImages = document.querySelectorAll('.lazy-image:not([src])');
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.src = img.dataset.src;
+                img.classList.add('loading');
+                img.onload = () => img.classList.remove('loading');
+                observer.unobserve(img);
+            }
+        });
+    });
+
+    lazyImages.forEach(img => imageObserver.observe(img));
+}
+
+window.addEventListener('scroll', loadMoreContent);
+initializeLazyLoading();
+
+// Filter Animation
+const filterButtons = document.querySelectorAll('button');
+filterButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        filterButtons.forEach(btn => {
+            btn.classList.remove('bg-blue-500', 'text-white');
+            btn.classList.add('bg-white', 'dark:bg-gray-800');
+        });
+        button.classList.remove('bg-white', 'dark:bg-gray-800');
+        button.classList.add('bg-blue-500', 'text-white');
+    });
+});
+</script>
+{% endblock %}
+

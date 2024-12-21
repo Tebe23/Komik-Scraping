@@ -1,0 +1,169 @@
+{# popular.html #}
+{% extends "base.html" %}
+
+{% block title %}Manga Populer - KomikApp{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold mb-4">Manga Populer</h1>
+        
+        <!-- Filter Section -->
+        <div class="flex flex-wrap gap-4 items-center">
+            <!-- Type Filter -->
+            <div class="flex flex-wrap gap-2">
+                <button class="filter-type px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600" data-type="all">
+                    Semua
+                </button>
+                {% set unique_types = [] %}
+                {% for manga in komik_data %}
+                    {% if manga.type not in unique_types %}
+                        {% set _ = unique_types.append(manga.type) %}
+                        <button class="filter-type px-4 py-2 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" data-type="{{ manga.type }}">
+                            {{ manga.type }}
+                        </button>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            
+            <!-- Sort Dropdown -->
+            <div class="relative">
+                <select id="sortSelect" class="appearance-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 pr-8">
+                    <option value="popular">Terpopuler</option>
+                    <option value="rating">Rating Tertinggi</option>
+                    <option value="latest">Terbaru</option>
+                    <option value="title">A-Z</option>
+                </select>
+                <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <i class="fas fa-chevron-down text-gray-400"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manga Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6" id="mangaGrid">
+        {% for manga in komik_data %}
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:-translate-y-1" 
+             data-type="{{ manga.type }}" 
+             data-score="{{ manga.score }}" 
+             data-update-time="{{ manga.update_time }}" 
+             data-title="{{ manga.title }}">
+            <a href="{{ url_for('detail', url=manga.link) }}" class="block">
+                <div class="relative pb-[140%]">
+                    <img data-src="{{ manga.image }}" 
+                         alt="{{ manga.title }}" 
+                         class="lazy-image absolute inset-0 w-full h-full object-cover">
+                    <div class="absolute top-0 right-0 m-2">
+                        <span class="bg-yellow-400 text-black px-2 py-1 rounded text-sm font-medium">
+                            {{ manga.score }}
+                        </span>
+                    </div>
+                    {% if manga.chapter %}
+                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black p-2">
+                        <span class="text-white text-sm">{{ manga.chapter }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="p-4">
+                    <h3 class="font-medium text-sm line-clamp-2 mb-2">{{ manga.title }}</h3>
+                    <div class="flex flex-wrap gap-2 text-xs">
+                        <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
+                            {{ manga.type }}
+                        </span>
+                        <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded">
+                            {{ manga.status }}
+                        </span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Load More / Pagination -->
+    <div class="mt-8 flex justify-center" id="paginationContainer">
+        {% if current_page > 1 %}
+        <a href="{{ url_for('popular', page=current_page-1) }}" 
+           class="mx-1 px-4 py-2 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+            <i class="fas fa-chevron-left mr-1"></i> Sebelumnya
+        </a>
+        {% endif %}
+
+        {% if has_next %}
+        <a href="{{ url_for('popular', page=current_page+1) }}" 
+           class="mx-1 px-4 py-2 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+            Selanjutnya <i class="fas fa-chevron-right ml-1"></i>
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Filter dan Sort Logic
+const mangaGrid = document.getElementById('mangaGrid');
+const mangaItems = [...mangaGrid.children];
+const filterButtons = document.querySelectorAll('.filter-type');
+const sortSelect = document.getElementById('sortSelect');
+
+let currentFilter = 'all';
+let currentSort = 'popular';
+
+function filterAndSortManga() {
+    const filteredManga = mangaItems.filter(item => {
+        const type = item.dataset.type;
+        return currentFilter === 'all' || type === currentFilter;
+    });
+
+    // Sort manga based on selected option
+    filteredManga.sort((a, b) => {
+        switch(currentSort) {
+            case 'rating':
+                const scoreA = parseFloat(a.dataset.score || 0);
+                const scoreB = parseFloat(b.dataset.score || 0);
+                return scoreB - scoreA;
+            case 'latest':
+                const timeA = new Date(a.dataset.updateTime || 0);
+                const timeB = new Date(b.dataset.updateTime || 0);
+                return timeB - timeA;
+            case 'title':
+                const titleA = a.dataset.title.toLowerCase() || '';
+                const titleB = b.dataset.title.toLowerCase() || '';
+                return titleA.localeCompare(titleB);
+            default:
+                return 0;
+        }
+    });
+
+    // Clear and repopulate grid
+    mangaGrid.innerHTML = '';
+    filteredManga.forEach(item => mangaGrid.appendChild(item));
+}
+
+// Event Listeners
+filterButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        filterButtons.forEach(btn => {
+            btn.classList.remove('bg-blue-500', 'text-white');
+            btn.classList.add('bg-white', 'dark:bg-gray-800');
+        });
+        button.classList.remove('bg-white', 'dark:bg-gray-800');
+        button.classList.add('bg-blue-500', 'text-white');
+        
+        currentFilter = button.dataset.type;
+        filterAndSortManga();
+    });
+});
+
+sortSelect.addEventListener('change', (e) => {
+    currentSort = e.target.value;
+    filterAndSortManga();
+});
+
+// Initialize
+filterAndSortManga();
+</script>
+{% endblock %}
