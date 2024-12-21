@@ -12,6 +12,10 @@ app = Flask(__name__)
 # Konfigurasi cache
 cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 300})
 
+# Versi data
+current_version = 1  # Anda bisa mengubah versi ini jika ada perubahan pada data
+
+
 # Fungsi untuk format timestamp
 def format_time_ago(timestamp):
     try:
@@ -42,6 +46,7 @@ def format_time_ago(timestamp):
 @cache.memoize(timeout=300)
 def scrape_komik(url):
     response = requests.get(url)
+    response.encoding = 'utf-8'  
     soup = BeautifulSoup(response.text, 'html.parser')
 
     komik_data = []
@@ -90,6 +95,7 @@ def scrape_komik(url):
 def scrape_detail_komik(url):
     try:
         response = requests.get(url)
+        response.encoding = 'utf-8'  
         soup = BeautifulSoup(response.text, 'html.parser')
 
         # Data dasar
@@ -110,7 +116,7 @@ def scrape_detail_komik(url):
         genres = [genre.text for genre in soup.select('.komik_info-content-genre .genre-item')]
         
         # Informasi detail
-        info_elements = soup.select('.komik_info-content-info')
+        info_elements = soup.select('.komik_info-content-meta span')
         release = ''
         author = ''
         status = ''
@@ -149,7 +155,7 @@ def scrape_detail_komik(url):
                     relative_chapter_link = '/' + relative_chapter_link
                 
                 time_elem = chapter.select_one('.chapter-link-time')
-                update_time = time_elem['datetime'] if time_elem and 'datetime' in time_elem.attrs else ''
+                update_time = time_elem.text.strip() if time_elem else ''
                     
                 chapters.append({
                     'title': chapter_link_elem.text.strip(),
@@ -184,6 +190,7 @@ def scrape_detail_komik(url):
 def scrape_chapter(url):
     try:
         response = requests.get(url)
+        response.encoding = 'utf-8'  
         soup = BeautifulSoup(response.content, 'html.parser')
 
         # Ambil judul chapter

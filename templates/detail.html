@@ -43,7 +43,7 @@
                     </div>
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">Rilis</span>
-                        <p class="font-medium">{{ komik_detail.release }}</p
+                        <p class="font-medium">{{ komik_detail.release }}</p>
                     </div>
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">Total Chapter</span>
@@ -77,8 +77,17 @@
 
         <!-- Chapter List -->
         <div class="border-t border-gray-200 dark:border-gray-700 p-6">
-            <h3 class="text-xl font-bold mb-4">Daftar Chapter</h3>
-            <div class="grid gap-2 max-h-96 overflow-y-auto">
+            <!-- Chapter Header with Sort Button -->
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Daftar Chapter</h3>
+                <button id="sortButton" class="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-all duration-200">
+                    <i id="sortIcon" class="fas fa-sort-amount-down text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Chapter List Container -->
+            <div id="chapterList" class="grid gap- ```html
+2 max-h-96 overflow-y-auto">
                 {% for chapter in komik_detail.chapters %}
                 <a href="{{ url_for('chapter', url=chapter.link) }}" 
                    class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
@@ -90,4 +99,52 @@
         </div>
     </div>
 </div>
+
+<!-- Sorting JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chapterList = document.getElementById('chapterList');
+    const sortButton = document.getElementById('sortButton');
+    const sortIcon = document.getElementById('sortIcon');
+    let isDescending = true; // Default sort: descending (newest first)
+
+    function sortChapters() {
+        const chapters = Array.from(chapterList.children);
+        
+        chapters.sort((a, b) => {
+            const titleA = a.querySelector('span').textContent;
+            const titleB = b.querySelector('span').textContent;
+            
+            const numA = parseFloat(titleA.replace(/[^0-9.]/g, ''));
+            const numB = parseFloat(titleB.replace(/[^0-9.]/g, ''));
+            
+            return isDescending ? numB - numA : numA - numB;
+        });
+
+        // Clear and repopulate the chapter list
+        while (chapterList.firstChild) {
+            chapterList.removeChild(chapterList.firstChild);
+        }
+
+        chapters.forEach(chapter => {
+            chapterList.appendChild(chapter);
+        });
+
+        // Update icon and rotate animation
+        sortIcon.className = isDescending ? 'fas fa-sort-amount-down text-xl' : 'fas fa-sort-amount-up text-xl';
+    }
+
+    sortButton.addEventListener('click', () => {
+        isDescending = !isDescending;
+        sortButton.classList.add('rotate-180');
+        setTimeout(() => {
+            sortButton.classList.remove('rotate-180');
+        }, 200);
+        sortChapters();
+    });
+
+    // Initial sort
+    sortChapters();
+});
+</script>
 {% endblock %}
