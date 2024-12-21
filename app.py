@@ -1,10 +1,12 @@
-from flask import Flask, render_template, request, jsonify, url_for, redirect
+from flask import Flask, render_template, request, jsonify, url_for, redirect, send_file
 import requests
 import json
 from bs4 import BeautifulSoup
 from flask_caching import Cache
 import time
 from datetime import datetime
+import io
+import zipfile
 
 app = Flask(__name__)
 
@@ -43,6 +45,27 @@ def format_time_ago(timestamp):
         print(f"Error formatting time: {str(e)}")
         return timestamp
 
+def create_cbz_from_images(images, manga_title, chapter_title):
+    # Buat ZIP dalam memory
+    zip_buffer = io.BytesIO()
+    
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as cbz:
+        for idx, img_url in enumerate(images, start=1):
+            try:
+                # Download gambar
+                response = requests.get(img_url)
+                if response.status_code == 200:
+                    # Simpan gambar dengan nama yang terurut
+                    image_ext = img_url.split('.')[-1].split('?')[0]
+                    image_name = f'{idx:03d}.{image_ext}'
+                    cbz.writestr(image_name, response.content)
+            except Exception as e:
+                print(f"Error downloading image {idx}: {str(e)}")
+                continue
+
+    zip_buffer.seek(0)
+    return zip_buffer
+    
 # Fungsi scraping komik
 @cache.memoize(timeout=300)
 def scrape_komik(url, force_refresh=False):
@@ -440,6 +463,98 @@ def refresh_data():
     clear_manga_cache()
     return redirect(url_for('home'))
 
+# Route untuk download single chapter
+@app.route('/download/chapter/<path:url>')
+def download_chapter(url):
+    try:
+        if not url.startswith('/'):
+            url = '/' + url
+        
+        chapter_url = f"https://komikcast.bz{url}"
+        chapter_data = scrape_chapter(chapter_url)
+        
+        if chapter_data is None:
+            return "Chapter tidak ditemukan", 404
+            
+        # Buat CBZ
+        cbz_buffer = create_cbz_from_images(
+            chapter_data['images'],
+            chapter_data['title'],
+            chapter_data['title']
+        )
+        
+        # Buat nama file yang aman
+        safe_filename = "".join(x for x in chapter_data['title'] if x.isalnum() or x in (' ', '-', '_'))
+        filename = f"{safe_filename}.cbz"
+        
+        return send_file(
+            cbz_buffer,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/x-cbz'
+        )
+    except Exception as e:
+        return f"Error: {str(e)}", 500
+
+# Route untuk download batch chapter
+@app.route('/download/batch/<path:url>')
+def download_batch(url):
+    try:
+        # Bersihkan URL
+        url = url.strip('/')
+        if not url.startswith('komik/'):
+            url = f"komik/{url}"
+        
+        komik_url = f"https://komikcast.bz/{url}"
+        komik_detail = scrape_detail_komik(komik_url)
+        
+        if komik_detail is None:
+            return "Komik tidak ditemukan", 404
+        
+        # Ambil chapter yang dipilih dari parameter
+        selected_chapters = request.args.getlist('chapters')
+        chapters_to_download = [ch for ch in komik_detail['chapters'] 
+                              if ch['link'] in selected_chapters]
+        
+        if not chapters_to_download:
+            return "Tidak ada chapter yang dipilih", 400
+            
+        # Buat ZIP untuk semua chapter
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as batch_zip:
+            for chapter in chapters_to_download:
+                try:
+                    chapter_data = scrape_chapter(f"https://komikcast.bz{chapter['link']}")
+                    if chapter_data and chapter_data['images']:
+                        # Buat CBZ untuk chapter ini
+                        chapter_buffer = create_cbz_from_images(
+                            chapter_data['images'],
+                            komik_detail['title'],
+                            chapter['title']
+                        )
+                        # Tambahkan ke batch ZIP
+                        safe_chapter_name = "".join(x for x in chapter['title'] 
+                                                  if x.isalnum() or x in (' ', '-', '_'))
+                        batch_zip.writestr(f"{safe_chapter_name}.cbz", 
+                                         chapter_buffer.getvalue())
+                except Exception as e:
+                    print(f"Error processing chapter {chapter['title']}: {str(e)}")
+                    continue
+        
+        zip_buffer.seek(0)
+        safe_manga_name = "".join(x for x in komik_detail['title'] 
+                                if x.isalnum() or x in (' ', '-', '_'))
+        filename = f"{safe_manga_name}_batch.zip"
+        
+        return send_file(
+            zip_buffer,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/zip'
+        )
+    except Exception as e:
+        return f"Error: {str(e)}", 500
+        
 # Error handlers
 @app.errorhandler(404)
 def page_not_found(e):
@@ -453,5 +568,3 @@ if __name__ == '__main__':
     app.run(debug=True)
     
     
-
-

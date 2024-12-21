@@ -82,22 +82,33 @@
 
         <!-- Chapter List -->
         <div class="border-t border-gray-200 dark:border-gray-700 p-6">
-            <!-- Chapter Header with Sort Button -->
+            <!-- Chapter Header with Select All and Download Button -->
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-bold">Daftar Chapter</h3>
-                <button id="sortButton" class="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-all duration-200">
-                    <i id="sortIcon" class="fas fa-sort-amount-down text-xl"></i>
-                </button>
+                <div class="flex items-center gap-2">
+                    <button id="selectAllChapters" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
+                        <i class="fas fa-check-square mr-2"></i>
+                        Pilih Semua
+                    </button>
+                    <button id="downloadSelected" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                        <i class="fas fa-download mr-2"></i>
+                        Download Terpilih
+                    </button>
+                </div>
             </div>
 
             <!-- Chapter List Container -->
             <div id="chapterList" class="grid gap-2 max-h-96 overflow-y-auto">
                 {% for chapter in komik_detail.chapters %}
-                <a href="{{ url_for('chapter', url=chapter.link) }}" 
-                   class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
-                    <span class="font-medium">{{ chapter.title }}</span>
-                    <span class="text-sm text-gray-500 dark:text-gray-400">{{ format_time_ago(chapter.time) }}</span>
-                </a>
+                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" class="chapter-checkbox" value="{{ chapter.link }}" id="chapter-{{ loop.index }}">
+                        <label for="chapter-{{ loop.index }}">{{ chapter.title }}</label>
+                    </div>
+                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                        {{ format_time_ago(chapter.time) }}
+                    </span>
+                </div>
                 {% endfor %}
             </div>
         </div>
@@ -198,4 +209,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<script>
+// Select/Deselect All Chapters and Download Selected
+document.getElementById('selectAllChapters').addEventListener('click', function() {
+    const checkboxes = document.querySelectorAll('.chapter-checkbox');
+    const isAllChecked = [...checkboxes].every(cb => cb.checked);
+    checkboxes.forEach(cb => cb.checked = !isAllChecked);
+});
+
+document.getElementById('downloadSelected').addEventListener('click', function() {
+    const selected = [...document.querySelectorAll('.chapter-checkbox:checked')]
+        .map(cb => cb.value);
+    
+    if (selected.length === 0) {
+        alert('Pilih chapter yang ingin didownload terlebih dahulu');
+        return;
+    }
+    
+    const url = new URL(window.location.href.replace('/detail/', '/download/batch/'));
+    selected.forEach(chapter => url.searchParams.append('chapters', chapter));
+    
+    window.location.href = url.toString();
+});
+</script>
+
 {% endblock %}
