@@ -95,6 +95,53 @@ def scrape_komik(url, force_refresh=False):
     next_page_url = next_page['href'] if next_page else None
 
     return komik_data, next_page_url
+    
+# Fungsi pencarian komik
+@cache.memoize(timeout=300)
+def search_komik(query):
+    search_url = f"https://komikcast.bz/?s={query}"
+    response = requests.get(search_url)
+    response.encoding = 'utf-8'
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    komik_data = []
+    komiks = soup.select('.list-update_item')
+    
+    for komik in komiks:
+        title = komik.select_one('.title').text.strip()
+        full_link = komik.select_one('a')['href']
+        
+        if 'komikcast.bz' in full_link:
+            relative_link = full_link.split('komikcast.bz/')[-1]
+        else:
+            relative_link = full_link.lstrip('/')
+        
+        relative_link = relative_link.replace('komik/', '')
+        while '//' in relative_link:
+            relative_link = relative_link.replace('//', '/')
+        relative_link = relative_link.rstrip('/')
+        
+        image = komik.select_one('img')['src']
+        chapter = komik.select_one('.chapter').text.strip() if komik.select_one('.chapter') else "N/A"
+        score = komik.select_one('.numscore').text.strip() if komik.select_one('.numscore') else "N/A"
+        time_elem = komik.select_one('.timeago')
+        update_time = time_elem['datetime'] if time_elem else None
+        
+        types = komik.select_one('.type').text.strip() if komik.select_one('.type') else "N/A"
+        status = komik.select_one('.status').text.strip() if komik.select_one('.status') else "N/A"
+        
+        komik_data.append({
+            'title': title,
+            'link': relative_link,
+            'image': image,
+            'chapter': chapter,
+            'score': score,
+            'update_time': update_time,
+            'type': types,
+            'status': status
+        })
+    
+    return komik_data
 
 # Fungsi scraping detail komik
 @cache.memoize(timeout=300)
@@ -275,6 +322,16 @@ def home():
         app.logger.error(f"Home page error: {str(e)}")
         return render_template('error.html', error="Terjadi kesalahan saat memuat halaman")
 
+# Rute untuk pencarian komik
+@app.route('/search')
+def search():
+    query = request.args.get('query', '')
+    if query:
+        komik_data = search_komik(query)
+        return render_template('search.html', komik_data=komik_data, query=query, format_time_ago=format_time_ago)
+    else:
+        return redirect(url_for('home'))
+        
 @app.route('/popular')
 def popular():
     force_refresh = request.args.get('refresh', '0') == '1'
@@ -394,3 +451,7 @@ def internal_server_error(e):
 
 if __name__ == '__main__':
     app.run(debug=True)
+    
+    
+
+
