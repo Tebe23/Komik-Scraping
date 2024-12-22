@@ -587,6 +587,6 @@ def download_batch_new():
     return Response(generate(), mimetype='text/event-stream')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
     
     
