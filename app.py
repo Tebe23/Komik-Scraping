@@ -329,7 +329,7 @@ def home():
         popular_url = "https://komikcast.bz/daftar-komik/?status=&type=&orderby=popular"
         popular_data, _ = scrape_komik(popular_url, force_refresh)
         
-        latest_url = "https://komikcast.bz/daftar-komik/?sortby=update"
+        latest_url = "https://soulscans.my.id/latest-update"
         latest_data, _ = scrape_komik(latest_url, force_refresh)
         
         featured_data = popular_data[:6] if popular_data else []
